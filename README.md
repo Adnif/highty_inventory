@@ -1,3 +1,3 @@
-# highty_inventory
+# Highty Inventory
 
 A new Flutter project.
