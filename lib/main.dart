@@ -1,7 +1,9 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
-import 'package:highty_inventory/presentation/home_screen.dart';
+import 'package:highty_inventory/presentation/screens/history_screen.dart';
+import 'package:highty_inventory/presentation/screens/home_screen.dart';
+import 'package:highty_inventory/presentation/screens/login_screen.dart';
 
 void main() {
   runApp(const MainApp());
@@ -22,10 +24,14 @@ class _MainAppState extends State<MainApp> {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home:Scaffold(
-        body: HomeScreen(),
-      ) 
+    return  MaterialApp(
+      home: const Scaffold(
+        body: LoginScreen(),
+      ),
+      routes: {
+        '/homescreen': (context) => const HomeScreen(),
+        '/historyscreen': (context) => const HistoryScreen(),
+      }, 
     );
   
   }
