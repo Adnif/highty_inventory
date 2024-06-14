@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
+import 'package:highty_inventory/presentation/screens/stock_catalog.dart';
 
 class StockScreen extends StatefulWidget {
   const StockScreen({super.key});
@@ -13,10 +14,10 @@ class _StockScreenState extends State<StockScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Stocks Category'),
+        title: const Text('Stocks Category'),
         elevation: 0,
         titleTextStyle: primaryBold20,
-        iconTheme: IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -25,7 +26,10 @@ class _StockScreenState extends State<StockScreen> {
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
           children: [
-
+            _buildCategoryCard('Tops', 'assets/stocks/tops.png'),
+            _buildCategoryCard('Footwear', 'assets/stocks/footwear.png'),
+            _buildCategoryCard('Hats', 'assets/stocks/hats.png'),
+            _buildCategoryCard('Pants', 'assets/stocks/pants.png'),
           ],
         )
       ),
@@ -35,12 +39,17 @@ class _StockScreenState extends State<StockScreen> {
   Widget _buildCategoryCard(String title, String imagePath){
     return GestureDetector(
       onTap: (){
-
+        Navigator.push(
+          context, 
+          MaterialPageRoute(
+            builder: (context) => StockCatalog(category: title)
+          )
+        );
       },
       child: Stack(
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(15),
               child: Image.asset(
                 imagePath,
                 width: double.infinity,
@@ -50,13 +59,16 @@ class _StockScreenState extends State<StockScreen> {
           ),
           Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(15),
               color: Colors.black.withOpacity(0.5)
             ),
-            alignment: Alignment.center,
-            child: Text(
-              title,
-              style: primaryWhite,
+            alignment: Alignment.bottomLeft,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                title,
+                style: primaryWhite,
+              ),
             ),
           )
         ],
