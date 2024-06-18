@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:highty_inventory/presentation/constants/colors.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
-import 'package:highty_inventory/presentation/screens/stock_detail.dart';
+import 'package:highty_inventory/presentation/screens/stock/stock_detail.dart';
 
 class StockCatalog extends StatefulWidget {
   final String category;

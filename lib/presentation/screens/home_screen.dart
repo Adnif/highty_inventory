@@ -7,6 +7,7 @@ import 'package:highty_inventory/presentation/screens/order_screen.dart';
 import 'package:highty_inventory/presentation/screens/stock_screen.dart';
 import 'package:iconify_flutter/icons/ph.dart'; 
 import 'package:iconify_flutter/iconify_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool isLoading = false;
   int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = <Widget>[
@@ -29,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedIndex = index;
     });
+    
   }
 
   @override

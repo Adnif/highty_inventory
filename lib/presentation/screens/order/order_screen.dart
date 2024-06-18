@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
 import 'package:highty_inventory/presentation/screens/order_detail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({super.key});
@@ -10,6 +11,38 @@ class OrderScreen extends StatefulWidget {
 }
 
 class _OrderScreenState extends State<OrderScreen> {
+
+  String displayName = '';
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserDisplayName();
+  }
+
+  Future<void> _getUserDisplayName() async {
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        setState(() {
+          displayName = user.userMetadata?['full_name'] ?? 'No display name set';
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          displayName = 'User not logged in';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        displayName = 'Error fetching user data';
+        isLoading = false;
+      });
+    }
+  }
+
   final List<Map<String, String>> dummyOrders = [
     {'receipt': 'knlt1', 'orderId': 'mmk1'},
     {'receipt': 'knlt2', 'orderId': 'mmk2'},
@@ -21,7 +54,7 @@ class _OrderScreenState extends State<OrderScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Hi {Username}', style: primary20),
+        title: isLoading ? CircularProgressIndicator() : Text('Hi ${displayName}', style: primary20),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 17.0, vertical: 26.0),

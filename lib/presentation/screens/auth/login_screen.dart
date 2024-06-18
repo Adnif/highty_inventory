@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:highty_inventory/presentation/constants/colors.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,6 +12,45 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final SupabaseClient supabase = Supabase.instance.client;
+
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  bool isLoading = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void _login() async {
+    final sm = ScaffoldMessenger.of(context);
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final authResponse = await Supabase.instance.client.auth.signInWithPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+
+      if (authResponse.session != null) {
+        Navigator.popAndPushNamed(context, '/homescreen');
+      } else {
+        sm.showSnackBar(SnackBar(content: Text("Login failed. Please try again.")));
+      }
+    } catch (e) {
+      sm.showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+  
   bool _obscureText = true;
 
   @override
@@ -47,6 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 children: [
                   TextField(
+                    controller: emailController,
                     style: primary,
                     decoration: InputDecoration(
                       labelText: 'Username',
@@ -62,6 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   SizedBox(height: 16.0,),
                   TextField(
+                    controller: passwordController,
                     style: primary,
                     decoration: InputDecoration(
                       labelText: 'Password',
@@ -85,24 +128,25 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: _obscureText,
                   ),
                   const SizedBox(height: 28,),
-                  SizedBox(
-                    height: 48,
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: (){
-                        Navigator.popAndPushNamed(context, '/homescreen');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)
+                  isLoading 
+                  ? CircularProgressIndicator()
+                  : SizedBox(
+                      height: 48,
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30)
+                          )
+                        ),
+                        child: Text(
+                          'Login',
+                          style: primaryWhite,
                         )
-                      ),
-                      child: Text(
-                        'Login',
-                        style: primaryWhite,
-                      )),
-                  )
+                      )
+                    )
                 ],
               ),
             ),
@@ -111,4 +155,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
+  
 }
