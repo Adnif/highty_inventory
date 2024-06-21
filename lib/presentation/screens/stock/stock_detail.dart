@@ -121,6 +121,10 @@ class _StockDetailContentState extends State<StockDetailContent> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Stock updated successfully')),
           );
+          setState(() {
+            initialStock = List.from(stock); // Reset initial stock
+            isModified = false; // Reset modified flag
+          });
         } else if (state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.errorMessage!)),
@@ -138,7 +142,7 @@ class _StockDetailContentState extends State<StockDetailContent> {
                 onPressed: isModified
                     ? () {
                         final updateStock = UpdateStock(size: size, stock: stock, nama: widget.stockDetail.nama);
-                        context.read<UpdateStockCubit>().updateStock(updateStock);
+                        context.read<UpdateStockCubit>().updateStock(updateStock);                      
                       }
                     : null,
                 style: ButtonStyle(
