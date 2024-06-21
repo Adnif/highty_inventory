@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
-import 'package:highty_inventory/presentation/screens/order_detail.dart';
+import 'package:highty_inventory/presentation/screens/order/order_detail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class OrderScreen extends StatefulWidget {
@@ -11,36 +12,19 @@ class OrderScreen extends StatefulWidget {
 }
 
 class _OrderScreenState extends State<OrderScreen> {
-
   String displayName = '';
-  bool isLoading = true;
 
   @override
-  void initState() {
+  void initState(){
     super.initState();
-    _getUserDisplayName();
+    _getDisplayName();
   }
 
-  Future<void> _getUserDisplayName() async {
-    try {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user != null) {
-        setState(() {
-          displayName = user.userMetadata?['full_name'] ?? 'No display name set';
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          displayName = 'User not logged in';
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        displayName = 'Error fetching user data';
-        isLoading = false;
-      });
-    }
+  void _getDisplayName() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      displayName = prefs.getString('name') ?? 'Guest';
+    });
   }
 
   final List<Map<String, String>> dummyOrders = [
@@ -54,7 +38,7 @@ class _OrderScreenState extends State<OrderScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: isLoading ? CircularProgressIndicator() : Text('Hi ${displayName}', style: primary20),
+        title: Text('Hi $displayName', style: primary20),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 17.0, vertical: 26.0),

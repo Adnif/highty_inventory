@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
-import 'package:highty_inventory/presentation/screens/stock_catalog.dart';
+import 'package:highty_inventory/presentation/screens/stock/stock_catalog.dart';
 
 class StockScreen extends StatefulWidget {
   const StockScreen({super.key});

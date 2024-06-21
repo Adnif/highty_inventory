@@ -1,57 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:highty_inventory/domain/usecases/auth.dart';
+import 'package:highty_inventory/presentation/bloc/login_bloc.dart';
 import 'package:highty_inventory/presentation/constants/colors.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:highty_inventory/data/repositories/auth_repository_impl.dart';
 
-class LoginScreen extends StatefulWidget {
+
+class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
-
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-  final SupabaseClient supabase = Supabase.instance.client;
-
-  TextEditingController emailController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
-  bool isLoading = false;
-
-  @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
-  }
-
-  void _login() async {
-    final sm = ScaffoldMessenger.of(context);
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final authResponse = await Supabase.instance.client.auth.signInWithPassword(
-        email: emailController.text,
-        password: passwordController.text,
-      );
-
-      if (authResponse.session != null) {
-        Navigator.popAndPushNamed(context, '/homescreen');
-      } else {
-        sm.showSnackBar(SnackBar(content: Text("Login failed. Please try again.")));
-      }
-    } catch (e) {
-      sm.showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-  
-  bool _obscureText = true;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              //padding: const EdgeInsets.all(40),
               width: double.infinity,
               height: MediaQuery.of(context).size.height * 0.6,
               decoration: const BoxDecoration(
@@ -82,72 +39,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
-            SizedBox(height: 40,),
+            const SizedBox(height: 40,),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: emailController,
-                    style: primary,
-                    decoration: InputDecoration(
-                      labelText: 'Username',
-                      border: OutlineInputBorder(),
-                      labelStyle: primaryGrey,
-                      floatingLabelStyle: primary,
-                      focusColor: kPrimaryColor,
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: kPrimaryColor, width: 2.0)
-                      ),
-                      
-                    ),                   
-                  ),
-                  SizedBox(height: 16.0,),
-                  TextField(
-                    controller: passwordController,
-                    style: primary,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      border: OutlineInputBorder(),
-                      labelStyle: primaryGrey,
-                      floatingLabelStyle: primary,
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: kPrimaryColor, width: 2.0)
-                      ),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscureText ? Icons.visibility : Icons.visibility_off
-                        ),
-                        onPressed: (){
-                          setState(() {
-                            _obscureText = !_obscureText;
-                          });
-                        },
-                      )
-                    ),
-                    obscureText: _obscureText,
-                  ),
-                  const SizedBox(height: 28,),
-                  isLoading 
-                  ? CircularProgressIndicator()
-                  : SizedBox(
-                      height: 48,
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30)
-                          )
-                        ),
-                        child: Text(
-                          'Login',
-                          style: primaryWhite,
-                        )
-                      )
-                    )
-                ],
+              child: BlocProvider(
+                create: (context) {
+                  final supabase = Supabase.instance.client;
+                  final authRepository = AuthRepositoryImpl(supabase);
+                  final signInUseCase = SignInUseCase(authRepository);
+                  return LoginCubit(signInUseCase);
+                },
+                child: LoginForm(),
               ),
             ),
           ],
@@ -155,6 +57,102 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+}
 
-  
+class LoginForm extends StatefulWidget {
+  const LoginForm({super.key});
+
+  @override
+  State<LoginForm> createState() => _LoginFormState();
+}
+
+class _LoginFormState extends State<LoginForm> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  bool _obscureText = true;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<LoginCubit, LoginState>(
+      listener: (context, state) {
+        if (state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
+        }
+      },
+      builder: (context, state) {
+        return Column(
+          children: [
+            TextField(
+              controller: emailController,
+              style: primary,
+              decoration: InputDecoration(
+                labelText: 'Username',
+                border: OutlineInputBorder(),
+                labelStyle: primaryGrey,
+                floatingLabelStyle: primary,
+                focusColor: kPrimaryColor,
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: kPrimaryColor, width: 2.0)
+                ),
+              ),
+            ),
+            const SizedBox(height: 16.0,),
+            TextField(
+              controller: passwordController,
+              style: primary,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+                labelStyle: primaryGrey,
+                floatingLabelStyle: primary,
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: kPrimaryColor, width: 2.0)
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureText ? Icons.visibility : Icons.visibility_off
+                  ),
+                  onPressed: (){
+                    setState(() {
+                      _obscureText = !_obscureText;
+                    });
+                  },
+                ),
+              ),
+              obscureText: _obscureText,
+            ),
+            const SizedBox(height: 28,),
+            state.isLoading
+            ? const CircularProgressIndicator()
+            : SizedBox(
+                height: 48,
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    context.read<LoginCubit>().signIn(context, emailController.text, passwordController.text);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30)
+                    )
+                  ),
+                  child: Text(
+                    'Login',
+                    style: primaryWhite,
+                  )
+                )
+              )
+          ],
+        );
+      },
+    );
+  }
 }

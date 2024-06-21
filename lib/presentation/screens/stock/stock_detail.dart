@@ -1,29 +1,108 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:highty_inventory/data/repositories/stock_detail_repository_impl.dart';
+import 'package:highty_inventory/data/repositories/stock_repository_impl.dart';
+import 'package:highty_inventory/domain/entities/stock.dart';
+import 'package:highty_inventory/domain/usecases/stock.dart';
+import 'package:highty_inventory/presentation/bloc/stock_detail_cubit.dart';
+import 'package:highty_inventory/presentation/bloc/update_stock_cubit.dart';
 import 'package:highty_inventory/presentation/constants/colors.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 const double kPadding = 16.0;
 const double kIconSize = 24.0;
 const double kImageWidth = 150.0;
 
-class StockDetail extends StatefulWidget {
+class StockDetailScreen extends StatelessWidget {
   final String sku;
+  final String imageUrl;
 
-  const StockDetail({required this.sku, Key? key}) : super(key: key);
+  const StockDetailScreen({required this.sku, required this.imageUrl, Key? key}) : super(key: key);
 
   @override
-  State<StockDetail> createState() => _StockDetailState();
+  Widget build(BuildContext context) {
+    final supabaseClient = Supabase.instance.client;
+    final detailRepository = StockDetailRepositoryImpl(supabaseClient);
+    final updateRepository = UpdateStockRepositoryImpl(supabaseClient);
+
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (context) => StockDetailCubit(FetchStockDetailUseCase(detailRepository))..fetchStockDetail(sku),
+        ),
+        BlocProvider(
+          create: (context) => UpdateStockCubit(updateRepository),
+        ),
+      ],
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: kPrimaryColor,
+          iconTheme: const IconThemeData(
+            color: kAccentColor,
+          ),
+          title: Text(
+            sku,
+            style: primaryWhite,
+          ),
+        ),
+        body: StockDetailBody(imageUrl: imageUrl),
+      ),
+    );
+  }
 }
 
-class _StockDetailState extends State<StockDetail> {
-  List<int> stock = [11, 11, 11, 11];
+class StockDetailBody extends StatelessWidget {
+  final String imageUrl;
+
+  const StockDetailBody({required this.imageUrl, Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<StockDetailCubit, StockDetailState>(
+      listener: (context, state) {
+        if (state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errorMessage!)),
+          );
+        }
+      },
+      builder: (context, state) {
+        if (state.isLoading) {
+          return Center(child: CircularProgressIndicator());
+        } else if (state.stockDetail != null) {
+          final stockDetail = state.stockDetail!;
+          return StockDetailContent(stockDetail: stockDetail, imageUrl: imageUrl);
+        } else {
+          return Center(child: Text('No stock detail found'));
+        }
+      },
+    );
+  }
+}
+
+class StockDetailContent extends StatefulWidget {
+  final StockDetail stockDetail;
+  final String imageUrl;
+
+  const StockDetailContent({required this.stockDetail, required this.imageUrl, Key? key}) : super(key: key);
+
+  @override
+  State<StockDetailContent> createState() => _StockDetailContentState();
+}
+
+class _StockDetailContentState extends State<StockDetailContent> {
+  late List<int> stock;
+  late List<String> size;
   late List<int> initialStock;
   bool isModified = false;
 
   @override
   void initState() {
     super.initState();
+    stock = List.from(widget.stockDetail.stock);
+    size = List.from(widget.stockDetail.size);
     initialStock = List.from(stock);
   }
 
@@ -35,44 +114,51 @@ class _StockDetailState extends State<StockDetail> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: kPrimaryColor,
-        iconTheme: const IconThemeData(
-          color: kAccentColor,
-        ),
-        title: Text(
-          widget.sku,
-          style: primaryWhite,
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildHeader(),
-            const SizedBox(height: kPadding),
-            _buildStockList(),
-            ElevatedButton(
-              onPressed: isModified ? () {
-                // Update stock logic
-              } : null,
-              style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.all(
-                  isModified ? kPrimaryColor : Colors.grey,
+    String imageUrl = widget.imageUrl;
+    return BlocConsumer<UpdateStockCubit, UpdateStockState>(
+      listener: (context, state) {
+        if (state.isSuccess) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Stock updated successfully')),
+          );
+        } else if (state.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.errorMessage!)),
+          );
+        }
+      },
+      builder: (context, state) {
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              _buildHeader(imageUrl),
+              const SizedBox(height: kPadding),
+              _buildStockList(),
+              ElevatedButton(
+                onPressed: isModified
+                    ? () {
+                        final updateStock = UpdateStock(size: size, stock: stock, nama: widget.stockDetail.nama);
+                        context.read<UpdateStockCubit>().updateStock(updateStock);
+                      }
+                    : null,
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(
+                    isModified ? kPrimaryColor : Colors.grey,
+                  ),
+                ),
+                child: Text(
+                  'Update Stock',
+                  style: isModified ? primaryWhite : primaryDarkGrey,
                 ),
               ),
-              child: Text(
-                'Update Stock',
-                style: isModified ? primaryWhite : primaryDarkGrey,
-              ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(String imageUrl) {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -85,13 +171,15 @@ class _StockDetailState extends State<StockDetail> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            'assets/150x150.png',
-            width: kImageWidth,
+          Image.network(
+            imageUrl,
+            height: 150,
+            width: 150,
+            fit: BoxFit.cover,
           ),
           const SizedBox(height: kPadding / 2),
           Text(
-            'White Plain Mandarin Shirt',
+            widget.stockDetail.nama,
             style: primaryWhite20,
           ),
           Text(
@@ -110,7 +198,7 @@ class _StockDetailState extends State<StockDetail> {
       itemCount: stock.length,
       itemBuilder: (context, index) {
         return StockItem(
-          size: ['S', 'M', 'L', 'XL'][index],
+          size: size[index],
           stock: stock[index],
           onIncrease: () {
             setState(() {
@@ -122,7 +210,7 @@ class _StockDetailState extends State<StockDetail> {
             setState(() {
               if (stock[index] > 0) {
                 stock[index]--;
-                 checkIfModified();
+                checkIfModified();
               }
             });
           },
@@ -153,7 +241,7 @@ class StockItem extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            size, 
+            size,
             style: primary24,
             textAlign: TextAlign.center,
           ),

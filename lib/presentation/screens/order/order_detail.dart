@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
-import 'package:highty_inventory/presentation/screens/qr_check.dart';
+import 'package:highty_inventory/presentation/screens/order/qr_check.dart';
 
 class OrderDetail extends StatefulWidget {
   final String receipt;
