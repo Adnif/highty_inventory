@@ -14,11 +14,16 @@ void main() async {
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
-  runApp(const MainApp());
+
+  final supabase = Supabase.instance.client;
+  final session = supabase.auth.currentSession;
+
+  runApp(MainApp(initialRoute: session != null ? '/home' : '/auth'));
 }
 
 class MainApp extends StatefulWidget {
-  const MainApp({super.key});
+  final String initialRoute;
+  const MainApp({super.key, required this.initialRoute});
 
   @override
   State<MainApp> createState() => _MainAppState();
@@ -33,12 +38,11 @@ class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return  MaterialApp(
-      home: const Scaffold(
-        body: LoginScreen(),
-      ),
+      initialRoute: widget.initialRoute,
       routes: {
-        '/homescreen': (context) => const HomeScreen(),
+        '/home': (context) => const HomeScreen(),
         '/historyscreen': (context) => const HistoryScreen(),
+        '/auth': (context) => const LoginScreen(),
       }, 
     );
   

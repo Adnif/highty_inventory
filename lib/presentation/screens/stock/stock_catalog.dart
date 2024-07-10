@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:highty_inventory/data/repositories/stock_repository_impl.dart';
+import 'package:highty_inventory/data/repositories/test_repository_impl.dart';
 import 'package:highty_inventory/domain/usecases/stock.dart';
-import 'package:highty_inventory/presentation/bloc/stock_bloc.dart';
+import 'package:highty_inventory/domain/usecases/test.dart';
+import 'package:highty_inventory/presentation/bloc/test_cubit.dart';
 import 'package:highty_inventory/presentation/constants/colors.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
 import 'package:highty_inventory/presentation/screens/stock/stock_detail.dart';
@@ -17,10 +19,11 @@ class StockCatalog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final supabaseClient = Supabase.instance.client;
-    final repository = StockRepositoryImpl(supabaseClient);
+    final repository = StockRepository2Impl(supabaseClient);
 
     return BlocProvider(
-      create: (context) => StockCubit(FetchStockUseCase(repository))..fetchStock(category),
+      //create: (context) => StockCubit(FetchStockUseCase(repository))..fetchStock(category),
+      create: (context) => StockCubit2(FetchStockUseCase2(repository))..fetchThumbnail(category),
       child: Scaffold(
         appBar: AppBar(
           title: Text(
@@ -55,7 +58,7 @@ class _StockCatalogBodyState extends State<StockCatalogBody> {
   }
 
   void _filterStocks() {
-    context.read<StockCubit>().filterStocks(_searchController.text);
+    context.read<StockCubit2>().filterStocks(_searchController.text);
   }
 
   @override
@@ -76,7 +79,7 @@ class _StockCatalogBodyState extends State<StockCatalogBody> {
             ),
           ),
           Expanded(
-            child: BlocConsumer<StockCubit, StockState>(
+            child: BlocConsumer<StockCubit2, StockState2>(
               listener: (context, state) {
                 if (state.errorMessage != null) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -87,8 +90,8 @@ class _StockCatalogBodyState extends State<StockCatalogBody> {
               builder: (context, state) {
                 if (state.isLoading) {
                   return Center(child: CircularProgressIndicator());
-                } else if (state.stock != null) {
-                  final stocks = state.stock!;
+                } else if (state.stockList != null) {
+                  final stocks = state.stockList!;
                   return GridView.builder(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
@@ -100,8 +103,8 @@ class _StockCatalogBodyState extends State<StockCatalogBody> {
                     itemBuilder: (context, index) {
                       final stock = stocks[index];
                       return StockItem(
-                        sku: stock['SKU']!,
-                        imagePath: stock['images']!, // Assuming you have a default image
+                        sku: stock!.sku,
+                        imagePath: stock!.imageLink, // Assuming you have a default image
                       );
                     },
                   );

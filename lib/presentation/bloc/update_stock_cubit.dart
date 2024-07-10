@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:highty_inventory/domain/entities/order.dart';
 import 'package:highty_inventory/domain/entities/stock.dart';
 import 'package:highty_inventory/domain/repositories/stock_repository.dart';
 
@@ -31,10 +32,10 @@ class UpdateStockCubit extends Cubit<UpdateStockState> {
 
   UpdateStockCubit(this.updateStockRepository) : super(UpdateStockState());
 
-  Future<void> updateStock(UpdateStock updateStock) async {
+  Future<void> updateStock(UpdateStock newStock, UpdateStock initialStock) async {
     emit(state.copyWith(isLoading: true, errorMessage: null, isSuccess: false));
     try {
-      final result = await updateStockRepository.updateStock(updateStock);
+      final result = await updateStockRepository.updateStock(newStock, initialStock);
       if (result != null) {
         emit(state.copyWith(isLoading: false, isSuccess: true));
       } else {
@@ -43,5 +44,10 @@ class UpdateStockCubit extends Cubit<UpdateStockState> {
     } catch (e) {
       emit(state.copyWith(isLoading: false, errorMessage: 'An error occurred: $e', isSuccess: false));
     }
+  }
+
+  Future<void> updateStockAfterOrder(OrderDetail orderDetail) async {
+    emit(state.copyWith(isLoading: true, errorMessage: null, isSuccess: false));
+
   }
 }

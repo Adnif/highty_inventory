@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:highty_inventory/domain/usecases/auth.dart';
-import 'package:highty_inventory/presentation/bloc/login_bloc.dart';
+import 'package:highty_inventory/presentation/bloc/login_cubit.dart';
 import 'package:highty_inventory/presentation/constants/colors.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

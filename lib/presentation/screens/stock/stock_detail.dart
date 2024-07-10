@@ -3,9 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:highty_inventory/data/repositories/stock_detail_repository_impl.dart';
 import 'package:highty_inventory/data/repositories/stock_repository_impl.dart';
+import 'package:highty_inventory/data/repositories/test_repository_impl.dart';
 import 'package:highty_inventory/domain/entities/stock.dart';
+import 'package:highty_inventory/domain/entities/test.dart';
 import 'package:highty_inventory/domain/usecases/stock.dart';
+import 'package:highty_inventory/domain/usecases/test.dart';
 import 'package:highty_inventory/presentation/bloc/stock_detail_cubit.dart';
+import 'package:highty_inventory/presentation/bloc/test_cubit.dart';
 import 'package:highty_inventory/presentation/bloc/update_stock_cubit.dart';
 import 'package:highty_inventory/presentation/constants/colors.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
@@ -24,13 +28,14 @@ class StockDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final supabaseClient = Supabase.instance.client;
-    final detailRepository = StockDetailRepositoryImpl(supabaseClient);
+    final repository = StockRepository2Impl(supabaseClient);
     final updateRepository = UpdateStockRepositoryImpl(supabaseClient);
 
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => StockDetailCubit(FetchStockDetailUseCase(detailRepository))..fetchStockDetail(sku),
+          //create: (context) => StockDetailCubit(FetchStockDetailUseCase(detailRepository))..fetchStockDetail(sku),
+          create: (context) => StockCubit2(FetchStockUseCase2(repository))..fetchDetail(sku),
         ),
         BlocProvider(
           create: (context) => UpdateStockCubit(updateRepository),
@@ -60,7 +65,7 @@ class StockDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<StockDetailCubit, StockDetailState>(
+    return BlocConsumer<StockCubit2, StockState2>(
       listener: (context, state) {
         if (state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -71,8 +76,8 @@ class StockDetailBody extends StatelessWidget {
       builder: (context, state) {
         if (state.isLoading) {
           return Center(child: CircularProgressIndicator());
-        } else if (state.stockDetail != null) {
-          final stockDetail = state.stockDetail!;
+        } else if (state.product != null) {
+          final stockDetail = state.product!;
           return StockDetailContent(stockDetail: stockDetail, imageUrl: imageUrl);
         } else {
           return Center(child: Text('No stock detail found'));
@@ -83,7 +88,7 @@ class StockDetailBody extends StatelessWidget {
 }
 
 class StockDetailContent extends StatefulWidget {
-  final StockDetail stockDetail;
+  final Product2 stockDetail;
   final String imageUrl;
 
   const StockDetailContent({required this.stockDetail, required this.imageUrl, Key? key}) : super(key: key);
@@ -101,8 +106,8 @@ class _StockDetailContentState extends State<StockDetailContent> {
   @override
   void initState() {
     super.initState();
-    stock = List.from(widget.stockDetail.stock);
-    size = List.from(widget.stockDetail.size);
+    stock = List.from(widget.stockDetail.stock!.values.toList());
+    size = List.from(widget.stockDetail.stock!.keys.toList());
     initialStock = List.from(stock);
   }
 
@@ -141,8 +146,9 @@ class _StockDetailContentState extends State<StockDetailContent> {
               ElevatedButton(
                 onPressed: isModified
                     ? () {
-                        final updateStock = UpdateStock(size: size, stock: stock, nama: widget.stockDetail.nama);
-                        context.read<UpdateStockCubit>().updateStock(updateStock);                      
+                        final oldStock = UpdateStock(stock: initialStock, size: size, nama: widget.stockDetail.name);
+                        final newStock = UpdateStock(size: size, stock: stock, nama: widget.stockDetail.name);
+                        context.read<UpdateStockCubit>().updateStock(newStock, oldStock);                      
                       }
                     : null,
                 style: ButtonStyle(
@@ -183,7 +189,7 @@ class _StockDetailContentState extends State<StockDetailContent> {
           ),
           const SizedBox(height: kPadding / 2),
           Text(
-            widget.stockDetail.nama,
+            widget.stockDetail.name!,
             style: primaryWhite20,
           ),
           Text(

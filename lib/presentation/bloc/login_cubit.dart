@@ -26,7 +26,7 @@ class LoginCubit extends Cubit<LoginState> {
         log('${user.fullName}');
         final SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('name', user.fullName!);
-        Navigator.popAndPushNamed(context, '/homescreen');
+        Navigator.popAndPushNamed(context, '/home');
       } else {
         emit(LoginState(errorMessage: "Login failed. Please try again."));
       }

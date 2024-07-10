@@ -1,49 +1,87 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:highty_inventory/data/repositories/history_repository_impl.dart';
+import 'package:highty_inventory/domain/usecases/history.dart';
+import 'package:highty_inventory/presentation/bloc/history_cubit.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class HistoryScreen extends StatefulWidget {
+
+
+class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
 
   @override
-  State<HistoryScreen> createState() => _HistoryScreenState();
+  Widget build(BuildContext context){
+    final supabaseClient = Supabase.instance.client;
+    final historyRepository = HistoryRepositoryImpl(supabaseClient);
+
+    return BlocProvider(
+      create: (context) => HistoryCubit(FetchHistoryUseCase(historyRepository))..fetchHistory(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('History', style: primary),
+        ),
+        body: HistoryTable(),
+      )
+    );
+  }
+}  
+
+
+class HistoryTable extends StatefulWidget {
+  const HistoryTable({super.key});
+
+  @override
+  State<HistoryTable> createState() => _HistoryTableState();
 }
 
-class _HistoryScreenState extends State<HistoryScreen> {
-  final List<HistoryItem> historyItems = [
-    HistoryItem('Supplier 1 updated stock!', 'KTS30 L (+11)\nKTS30 M (+10)', '3h'),
-    HistoryItem('Supplier 2 updated stock!', 'KTS30 S (+7)\nKTS30 M (-10)', '4h'),
-  ];
+class _HistoryTableState extends State<HistoryTable> {
+  @override
+  void initState() {
+    super.initState();
+    // Fetch the history when the screen initializes
+    context.read<HistoryCubit>().fetchHistory();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('History', style: primary),
-      ),
-      body: ListView.builder(
-        itemCount: historyItems.length,
-        itemBuilder: (context, index){
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 6.0),
-            child: Card(
-              child: ListTile(
-                title: Text(historyItems[index].title),
-                subtitle: Text(historyItems[index].description),
-                trailing: Text(historyItems[index].time),
-              ),
-            ),
+    return BlocBuilder<HistoryCubit, HistoryState>(
+      builder: (context, state) {
+        if (state.isLoading) {
+          return Center(child: CircularProgressIndicator());
+        } else if (state.errorMessage != null) {
+          return Center(child: Text(state.errorMessage!));
+        } else if (state.history == null || state.history!.isEmpty) {
+          return Center(child: Text('No history found.'));
+        } else {
+          return ListView.builder(
+            itemCount: state.history!.length,
+            itemBuilder: (context, index) {
+              final historyItem = state.history![index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 6.0),
+                child: Card(
+                  child: ListTile(
+                    title: Text(historyItem.nama),
+                    subtitle: Text(historyItem.item),
+                    trailing: Text(historyItem.time),
+                  ),
+                ),
+              );
+            },
           );
         }
-      )
+      },
     );
   }
 }
 
-class HistoryItem {
-  final String title;
-  final String description;
-  final String time;
+// class HistoryItem {
+//   final String title;
+//   final String description;
+//   final String time;
 
-  HistoryItem(this.title, this.description, this.time);
-}
+//   HistoryItem(this.title, this.description, this.time);
+// }
