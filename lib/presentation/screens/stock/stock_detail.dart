@@ -1,15 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:highty_inventory/data/repositories/stock_detail_repository_impl.dart';
 import 'package:highty_inventory/data/repositories/stock_repository_impl.dart';
-import 'package:highty_inventory/data/repositories/test_repository_impl.dart';
 import 'package:highty_inventory/domain/entities/stock.dart';
 import 'package:highty_inventory/domain/entities/test.dart';
 import 'package:highty_inventory/domain/usecases/stock.dart';
-import 'package:highty_inventory/domain/usecases/test.dart';
-import 'package:highty_inventory/presentation/bloc/stock_detail_cubit.dart';
-import 'package:highty_inventory/presentation/bloc/test_cubit.dart';
+import 'package:highty_inventory/presentation/bloc/stock_cubit.dart';
 import 'package:highty_inventory/presentation/bloc/update_stock_cubit.dart';
 import 'package:highty_inventory/presentation/constants/colors.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
@@ -28,14 +24,14 @@ class StockDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final supabaseClient = Supabase.instance.client;
-    final repository = StockRepository2Impl(supabaseClient);
+    final repository = StockRepositoryImpl(supabaseClient);
     final updateRepository = UpdateStockRepositoryImpl(supabaseClient);
 
     return MultiBlocProvider(
       providers: [
         BlocProvider(
           //create: (context) => StockDetailCubit(FetchStockDetailUseCase(detailRepository))..fetchStockDetail(sku),
-          create: (context) => StockCubit2(FetchStockUseCase2(repository))..fetchDetail(sku),
+          create: (context) => StockCubit(FetchStockUseCase(repository))..fetchDetail(sku),
         ),
         BlocProvider(
           create: (context) => UpdateStockCubit(updateRepository),
@@ -65,7 +61,7 @@ class StockDetailBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<StockCubit2, StockState2>(
+    return BlocConsumer<StockCubit, StockState>(
       listener: (context, state) {
         if (state.errorMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(

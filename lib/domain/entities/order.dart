@@ -1,9 +1,17 @@
-class Order {
-  final String marketplace;
-  final String orderId;
-  final String status; 
+import 'package:highty_inventory/domain/entities/test.dart';
 
-  Order({required this.marketplace, required this.orderId, required this.status});
+class Order {
+  final String orderId;
+  final String marketplace;
+  List<Product2>? productList;
+  final String status; 
+  String? namaStaff;
+  String? timestamp;
+  String? resi;
+  String? date;
+  String? packageId;
+
+  Order({required this.orderId, required this.marketplace, this.productList, required this.status, this.namaStaff, this.timestamp, this.resi, this.date, this.packageId});
 }
 
 class OrderDetail {

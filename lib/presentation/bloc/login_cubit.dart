@@ -23,7 +23,7 @@ class LoginCubit extends Cubit<LoginState> {
       final user = await signInUseCase.call(email, password);
       if (user != null) {
         // Navigate to home screen or handle successful login
-        log('${user.fullName}');
+        log(user.id);
         final SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('name', user.fullName!);
         Navigator.popAndPushNamed(context, '/home');

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:highty_inventory/domain/entities/order.dart';
+import 'package:highty_inventory/domain/entities/test.dart';
 import 'package:highty_inventory/domain/repositories/stock_repository.dart';
 import 'package:highty_inventory/domain/entities/stock.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -11,27 +12,50 @@ class StockRepositoryImpl implements StockRepository {
   StockRepositoryImpl(this.supabase);
 
   @override
-  Future<List<Map<String, String>>?> fetch(String category) async {
-    try {
+  Future<List<Product2?>?> fetchThumbnail(String category) async {
+    try{
       final response = await supabase
-          .from('stock')
-          .select('SKU, images')
-          .eq('category', category);
-  
-      log('halo, masuk kok');
+        .from('stock')
+        .select('SKU, images')
+        .eq('category', category);
+      
+      log('halo, masuk yang kedua kok');
       final data = response as List<dynamic>;
       final stocks = data.map((item) {
-        return {
-          'SKU': item['SKU'] as String,
-          'images': item['images'] as String,
-        };
+        return Product2(sku: item['SKU'], imageLink: item['images']);
       }).toList();
 
-      log('Stock : ${stocks}');
-
       return stocks;
-    } catch (e) {
+    } catch(e){
       log('Exception occurred while fetching stock: $e');
+      return null;
+    }
+  }
+
+  @override
+  Future<Product2?> fetchDetail(String sku) async {
+    // TODO: implement fetchDetail
+    try{
+      final response = await supabase 
+        .from('stock')
+        .select('stock, nama, images')
+        .eq('SKU', sku);
+      
+      final data = response as List<dynamic>;
+      if(data.isEmpty){
+        return null;
+      }
+
+      final item = data[0];
+
+      return Product2(
+        sku: sku, 
+        name: item['nama'].toString(),
+        imageLink: item['images'].toString(),
+        stock: item['stock']
+      );
+    } catch(e){
+      log('Exception occurred while fetching stock detail: $e');
       return null;
     }
   }

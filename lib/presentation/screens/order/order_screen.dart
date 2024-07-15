@@ -79,11 +79,11 @@ class _OrderScreenState extends State<OrderScreen> {
                   builder: (context, state) {
                     if(state.isLoading){
                       return Center(child: CircularProgressIndicator());
-                    } else if (state.order != null){
+                    } else if (state.orderList != null && state.orderList!.isNotEmpty){
                       return ListView.builder(
-                        itemCount: state.order!.length,
+                        itemCount: state.orderList!.length,
                         itemBuilder: (_, index) {
-                          final order = state.order![index];
+                          final order = state.orderList![index];
                           return GestureDetector(
                             onTap: (){
                               Navigator.push(
@@ -111,7 +111,7 @@ class _OrderScreenState extends State<OrderScreen> {
                           );
                         },
                       );
-                    } else if(state.order != null && state.order!.isEmpty){
+                    } else if(state.orderList!.isEmpty){
                       return  Center(child: Text("No orders today :'D"));
                     } else {
                       return Center(child: Text('No orders found'));

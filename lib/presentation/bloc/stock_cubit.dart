@@ -2,23 +2,24 @@ import 'dart:developer';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:highty_inventory/domain/entities/test.dart';
+import 'package:highty_inventory/domain/usecases/stock.dart';
 import 'package:highty_inventory/domain/usecases/test.dart';
 
-class StockState2 {
+class StockState {
   final bool isLoading;
   final String? errorMessage;
   final List<Product2?>? stockList;
   final Product2? product;
 
-  StockState2({this.isLoading = false, this.errorMessage, this.stockList, this.product});
+  StockState({this.isLoading = false, this.errorMessage, this.stockList, this.product});
 
-  StockState2 copyWith({
+  StockState copyWith({
     bool? isLoading,
     String? errorMessage,
     List<Product2?>? stockList,
     Product2? product
   }) {
-    return StockState2(
+    return StockState(
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
       stockList: stockList ?? this.stockList,
@@ -27,16 +28,16 @@ class StockState2 {
   }
 }
 
-class StockCubit2 extends Cubit<StockState2> {
-  final FetchStockUseCase2 fetchStockUseCase2;
+class StockCubit extends Cubit<StockState> {
+  final FetchStockUseCase fetchStockUseCase;
   List<Product2?> allStocks = [];
 
-  StockCubit2(this.fetchStockUseCase2) : super(StockState2());
+  StockCubit(this.fetchStockUseCase) : super(StockState());
 
   Future<void> fetchThumbnail(String category) async {
     emit(state.copyWith(isLoading: true, errorMessage: null));
     try {
-      final stock = await fetchStockUseCase2.fetchThumbnail(category);
+      final stock = await fetchStockUseCase.fetchThumbnail(category);
       if (stock != null) {
         allStocks = stock;
         emit(state.copyWith(isLoading: false, stockList: stock));
@@ -51,7 +52,7 @@ class StockCubit2 extends Cubit<StockState2> {
   Future<void> fetchDetail(String sku) async {
     emit(state.copyWith(isLoading: true, errorMessage: null));
     try {
-      final product = await fetchStockUseCase2.fetchDetail(sku);
+      final product = await fetchStockUseCase.fetchDetail(sku);
       log('ini product di cubit : $product');
       if (product != null) {
         emit(state.copyWith(isLoading: false, product: product));

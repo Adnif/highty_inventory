@@ -6,17 +6,31 @@ class FetchOrderUseCase {
 
   FetchOrderUseCase(this.repository);
 
-  Future<List<Order>?> fetch() {
+  Future<List<Order>?> fetchOrderList() {
     return repository.fetchOrderList();
+  }
+
+  Future<Order?> fetchOrderDetail(String orderId) {
+    return repository.fetchOrderDetail2(orderId);
   }
 }
 
 class FetchOrderDetailUseCase {
-  final OrderDetailRepository repository;
+  final OrderRepository repository;
 
   FetchOrderDetailUseCase(this.repository);
 
-  Future<OrderDetail?> fetch(String orderId) {
-    return repository.fetchOrderDetail(orderId);
+  Future<Order?> fetch(String orderId) {
+    return repository.fetchOrderDetail2(orderId);
+  }
+}
+
+class ConfirmOrderUseCase {
+  final OrderRepository repository;
+
+  ConfirmOrderUseCase(this.repository);
+
+  Future<bool> confirmOrder(String packageId) {
+    return repository.confirmOrder(packageId);
   }
 }

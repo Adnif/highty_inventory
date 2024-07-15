@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:highty_inventory/data/repositories/order_repository_impl.dart';
 import 'package:highty_inventory/domain/entities/order.dart';
+import 'package:highty_inventory/domain/entities/test.dart';
 import 'package:highty_inventory/domain/usecases/order.dart';
 import 'package:highty_inventory/presentation/bloc/order_cubit.dart';
 import 'package:highty_inventory/presentation/constants/fonts.dart';
@@ -20,7 +22,7 @@ class _OrderDetailState extends State<OrderDetail> {
 
   @override
   Widget build(BuildContext context) {
-    final repository = OrderDetailRepositoryImpl();
+    final repository = OrderRepositoryImpl();
     return BlocProvider(
       create: (context) => OrderDetailCubit(FetchOrderDetailUseCase(repository))..fetchOrderDetail(widget.orderId),
       child: Scaffold(
@@ -51,16 +53,19 @@ class _OrderDetailState extends State<OrderDetail> {
                       children: [
                         OrderDetails(
                           orderId: state.orderDetail!.orderId,
-                          date: '10 Mar 24',
+                          date: state.orderDetail!.date ?? 'Unknown',
+                          resi: state.orderDetail!.resi ?? 'Unknown',
                         ),
                         ElevatedButton(
                           onPressed: (){
-                            Navigator.push(
-                              context, 
-                              MaterialPageRoute(
-                                builder: (context) => QrCheck(receipt: widget.orderId,)
+                            state.orderDetail!.resi != null
+                            ? Navigator.push(
+                                context, 
+                                MaterialPageRoute(
+                                  builder: (context) => QrCheck(receipt: state.orderDetail!.resi!, packageId: state.orderDetail!.packageId!,)
+                                )
                               )
-                            );
+                            : Fluttertoast.showToast(msg: 'Resi belum ada');
                           },
                           child: Icon(Icons.qr_code),
                           style: ElevatedButton.styleFrom(
@@ -76,9 +81,9 @@ class _OrderDetailState extends State<OrderDetail> {
                     const SizedBox(height: 16,),
                     Expanded(
                       child: ListView.builder(
-                        itemCount: state.orderDetail!.productList.length,
+                        itemCount: state.orderDetail!.productList!.length,
                         itemBuilder: (context, index) {
-                          final finalProduct = state.orderDetail!.productList[index];
+                          final finalProduct = state.orderDetail!.productList![index];
                           return ProductTile(product: finalProduct);
                         },
                       ),
@@ -117,8 +122,9 @@ class _OrderDetailState extends State<OrderDetail> {
 class OrderDetails extends StatelessWidget {
   final String orderId;
   final String date;
+  final String resi;
 
-  OrderDetails({required this.orderId, required this.date});
+  OrderDetails({required this.orderId, required this.date, required this.resi});
 
   @override
   Widget build(BuildContext context) {
@@ -128,6 +134,7 @@ class OrderDetails extends StatelessWidget {
         Text('Order Details', style: primaryBold20,),
         Text('Order ID: $orderId', style: primary,),
         Text('Date: $date', style: primary,),
+        Text('Tracking Code: $resi', style: primary,),
       ],
     );
   }
@@ -135,7 +142,7 @@ class OrderDetails extends StatelessWidget {
 
 
 class ProductTile extends StatelessWidget {
-  final Product product;
+  final Product2 product;
 
   ProductTile({required this.product});
 

@@ -8,8 +8,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 class QrCheck extends StatefulWidget {
   final String receipt;
+  String? packageId; //required if it's order from lazada
 
-  const QrCheck({required this.receipt, super.key});
+  QrCheck({required this.receipt, super.key, this.packageId});
 
   @override
   State<QrCheck> createState() => _QrCheckState();
@@ -89,6 +90,7 @@ class _QrCheckState extends State<QrCheck> {
               final Uint8List? image = capture.image;
               for(final barcode in barcodes) {
                 log('Barcode found! ${barcode.rawValue}');
+                log('Resi : ${widget.receipt}');
                 if(barcode.rawValue == widget.receipt){
                   Navigator.pop(context);
                   Fluttertoast.showToast(msg: 'Pesanan terkonfirmasi');

@@ -60,7 +60,7 @@ Future<List<Order>> callOrderListTikTokApi() async {
     'app_key': '6cuijn10qomu0',
     'shop_cipher': '',
     'shop_id': '7495820846510082392',
-    'timestamp': timestamp,
+    'timestamp': 'timestamp',
     'version': '202212'
   };
 
@@ -102,12 +102,13 @@ Future<List<Order>> callOrderListTikTokApi() async {
         return [];
       }
     } else {
-      log('masuk bre');
+      log('Order List Tiktok Gagal');
       log('Request failed with status: ${response.statusCode}');
       log('Request failed with body: ${response.body}');
       return [];
     }
   } catch (e) {
+    log('Order List Tiktok Gagal');
     log('Request failed with error: $e');
     return [];
   }
@@ -169,7 +170,7 @@ Future<OrderDetail> callOrderDetailTiktokApi(String orderId) async {
 
       return OrderDetail(orderId: orderId, date: date, productList: productList);
     } else {
-      log('masuk bre');
+      log('Order Detail TikTok Gagal');
       log('Request failed with status: ${response.statusCode}');
       log('Request failed with body: ${response.body}');
       return OrderDetail(orderId: 'failed', date: 'XX-XXX-XXX', productList: []);
